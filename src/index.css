@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #00e5ff;
+  --color-accent: #ff6f00;
+  
+  --font-sans: "Outfit", "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+}
+
+/* Immersive UI Advanced Glassmorphism and Neon Glow Utilities */
+.glass-panel-dark {
+  background: rgba(10, 10, 14, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 229, 255, 0.12);
+}
+
+.glass-panel-light {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.neon-glow-cyan {
+  box-shadow: 0 0 20px rgba(0, 229, 255, 0.2);
+}
+
+.neon-glow-amber {
+  box-shadow: 0 0 20px rgba(255, 111, 0, 0.2);
+}
+
+.neon-border-cyan {
+  border-color: rgba(0, 229, 255, 0.35);
+}
+
+.neon-border-amber {
+  border-color: rgba(255, 111, 0, 0.35);
+}
+
+.text-neon-glow {
+  text-shadow: 0 0 8px rgba(0, 229, 255, 0.4);
+}
+
+/* Smooth ambient floating animation */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+/* Custom scrollbar to match the high-end dashboard feel */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #060608;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 229, 255, 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #00e5ff;
+}
