@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings
+from typing import List
 
 class Settings(BaseSettings):
     supabase_url: str
@@ -8,6 +9,11 @@ class Settings(BaseSettings):
     jwt_expires_days: int = 7
     admin_email: str = ""
     google_client_id: str = ""
+    allowed_origins: str = "http://localhost:5173,http://localhost:3000"
+
+    @property
+    def origins(self) -> List[str]:
+        return [o.strip() for o in self.allowed_origins.split(",")]
 
     class Config:
         env_file = ".env"

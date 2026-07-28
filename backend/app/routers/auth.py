@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from passlib.context import CryptContext
 from google.oauth2 import id_token
 from google.auth.transport import requests as grequests
@@ -6,12 +6,14 @@ from app.models.user import UserRegister, UserLogin, UserUpdate, PasswordChange,
 from app.database import supabase
 from app.config import settings
 from app.dependencies import create_token, get_current_user
+from app.limiter import limiter
 
 router = APIRouter()
 pwd = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 @router.post("/register")
-def register(body: UserRegister):
+@limiter.limit("10/minute")
+def register(request: Request, body: UserRegister):
     if supabase.table("users").select("email").eq("email", body.email).execute().data:
         raise HTTPException(400, "User already exists")
     user = {
@@ -26,7 +28,8 @@ def register(body: UserRegister):
     return {"token": token, "user": user}
 
 @router.post("/login")
-def login(body: UserLogin):
+@limiter.limit("10/minute")
+def login(request: Request, body: UserLogin):
     res = supabase.table("users").select("*").eq("email", body.email).execute()
     if not res.data or not pwd.verify(body.password, res.data[0]["password"]):
         raise HTTPException(401, "Invalid credentials")
@@ -63,7 +66,8 @@ def logout():
     return {"message": "Logged out"}
 
 @router.post("/google")
-def google_auth(body: dict):
+@limiter.limit("10/minute")
+def google_auth(request: Request, body: dict):
     if not settings.google_client_id:
         raise HTTPException(500, "Google OAuth not configured")
     try:
