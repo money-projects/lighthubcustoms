@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from datetime import datetime
+from typing import Optional
 from app.models.product import ProductCreate, ProductOut, StockUpdate
 from app.database import supabase
 from app.dependencies import require_admin
@@ -7,12 +8,25 @@ from app.dependencies import require_admin
 router = APIRouter()
 
 @router.get("")
-def get_all():
-    return supabase.table("products").select("*").eq("is_active", True).execute().data
+def get_all(
+    q:        Optional[str]   = Query(None),
+    category: Optional[str]   = Query(None),
+    section:  Optional[str]   = Query(None),
+    min_price: Optional[int]  = Query(None),
+    max_price: Optional[int]  = Query(None),
+    page:     int             = Query(1, ge=1),
+    limit:    int             = Query(20, ge=1, le=100),
+):
+    query = supabase.table("products").select("*", count="exact").eq("is_active", True)
+    if q:         query = query.ilike("name", f"%{q}%")
+    if category:  query = query.eq("category", category)
+    if section:   query = query.eq("section", section)
+    if min_price is not None: query = query.gte("price", min_price)
+    if max_price is not None: query = query.lte("price", max_price)
 
-@router.get("/search")
-def search(q: str):
-    return supabase.table("products").select("*").ilike("name", f"%{q}%").execute().data
+    offset = (page - 1) * limit
+    res = query.order("name").range(offset, offset + limit - 1).execute()
+    return {"data": res.data, "total": res.count, "page": page, "limit": limit, "pages": -(-res.count // limit)}
 
 @router.get("/category/{category}")
 def by_category(category: str):

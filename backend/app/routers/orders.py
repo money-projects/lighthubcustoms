@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from datetime import datetime
+from typing import Optional
 from app.models.order import OrderCreate, OrderStatusUpdate, PaymentStatusUpdate, TrackingUpdate
 from app.database import supabase
 from app.dependencies import get_current_user, require_admin
@@ -7,12 +8,30 @@ from app.dependencies import get_current_user, require_admin
 router = APIRouter()
 
 @router.get("")
-def get_user_orders(user: dict = Depends(get_current_user)):
-    return supabase.table("orders").select("*").eq("user_id", user["sub"]).order("created_at", desc=True).execute().data
+def get_user_orders(
+    page:   int = Query(1, ge=1),
+    limit:  int = Query(10, ge=1, le=50),
+    status: Optional[str] = Query(None),
+    user: dict = Depends(get_current_user)
+):
+    query = supabase.table("orders").select("*", count="exact").eq("user_id", user["sub"])
+    if status: query = query.eq("status", status)
+    offset = (page - 1) * limit
+    res = query.order("created_at", desc=True).range(offset, offset + limit - 1).execute()
+    return {"data": res.data, "total": res.count, "page": page, "limit": limit, "pages": -(-res.count // limit)}
 
 @router.get("/all")
-def get_all(_: dict = Depends(require_admin)):
-    return supabase.table("orders").select("*").order("created_at", desc=True).execute().data
+def get_all(
+    page:   int = Query(1, ge=1),
+    limit:  int = Query(20, ge=1, le=100),
+    status: Optional[str] = Query(None),
+    _: dict = Depends(require_admin)
+):
+    query = supabase.table("orders").select("*", count="exact")
+    if status: query = query.eq("status", status)
+    offset = (page - 1) * limit
+    res = query.order("created_at", desc=True).range(offset, offset + limit - 1).execute()
+    return {"data": res.data, "total": res.count, "page": page, "limit": limit, "pages": -(-res.count // limit)}
 
 @router.get("/{order_id}")
 def get_order(order_id: str, user: dict = Depends(get_current_user)):
