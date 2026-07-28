@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Radiant Motors</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0c0f0a; color: #e8e8e0; }
+
+    nav { display: flex; justify-content: space-between; align-items: center; padding: 18px 48px; background: #0c0f0a; border-bottom: 1px solid #1e2a1a; position: sticky; top: 0; z-index: 10; }
+    .logo { font-size: 20px; font-weight: 800; color: #fff; letter-spacing: 1px; }
+    .logo span { color: #c9a84c; }
+    .nav-links { display: flex; gap: 28px; list-style: none; }
+    .nav-links a { color: #6b7c61; text-decoration: none; font-size: 14px; transition: color 0.2s; }
+    .nav-links a:hover { color: #c9a84c; }
+    .nav-actions { display: flex; gap: 12px; }
+    .btn { padding: 9px 22px; border-radius: 6px; font-size: 14px; cursor: pointer; border: none; font-weight: 600; }
+    .btn-outline { background: transparent; border: 1px solid #2a3a22; color: #a0b090; }
+    .btn-primary { background: #c9a84c; color: #0c0f0a; }
+    .btn-primary:hover { background: #e0bf6a; }
+
+    .hero { background: linear-gradient(135deg, #0c0f0a 0%, #111a0d 60%, #0c0f0a 100%); padding: 90px 48px 80px; display: flex; align-items: center; justify-content: space-between; }
+    .hero-left { max-width: 560px; }
+    .hero-tag { display: inline-block; background: #1a2a14; color: #c9a84c; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; padding: 5px 14px; border-radius: 20px; margin-bottom: 20px; border: 1px solid #2a3a1e; }
+    .hero h1 { font-size: 50px; font-weight: 800; line-height: 1.1; color: #fff; margin-bottom: 20px; }
+    .hero h1 span { color: #c9a84c; }
+    .hero p { color: #5a6b50; font-size: 16px; line-height: 1.7; margin-bottom: 36px; }
+    .hero-btns { display: flex; gap: 14px; }
+    .hero-right { font-size: 140px; opacity: 0.1; }
+
+    .stats { background: #111a0d; display: flex; justify-content: center; border-bottom: 1px solid #1e2a1a; }
+    .stat { padding: 28px 56px; text-align: center; border-right: 1px solid #1e2a1a; }
+    .stat:last-child { border-right: none; }
+    .stat h3 { font-size: 28px; font-weight: 800; color: #c9a84c; }
+    .stat p { font-size: 13px; color: #4a5a40; margin-top: 4px; }
+
+    .section { padding: 64px 48px; }
+    .section-title { font-size: 24px; font-weight: 800; margin-bottom: 8px; color: #e8e8e0; }
+    .section-sub { color: #4a5a40; font-size: 14px; margin-bottom: 32px; }
+    .section-title span { color: #c9a84c; }
+
+    .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .card { background: #111a0d; border: 1px solid #1e2a1a; border-radius: 12px; padding: 28px 24px; cursor: pointer; transition: all 0.2s; }
+    .card:hover { border-color: #c9a84c; box-shadow: 0 4px 20px rgba(201,168,76,0.1); transform: translateY(-2px); }
+    .card-icon { font-size: 32px; margin-bottom: 14px; }
+    .card h3 { font-size: 15px; font-weight: 700; margin-bottom: 6px; color: #e8e8e0; }
+    .card p { font-size: 13px; color: #4a5a40; }
+
+    .products { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .product { background: #111a0d; border: 1px solid #1e2a1a; border-radius: 12px; overflow: hidden; transition: all 0.2s; }
+    .product:hover { border-color: #c9a84c; transform: translateY(-2px); }
+    .product-img { height: 160px; background: #0e160b; display: flex; align-items: center; justify-content: center; font-size: 48px; }
+    .product-body { padding: 16px; }
+    .product-body h4 { font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #e8e8e0; }
+    .product-body .price { color: #c9a84c; font-weight: 800; font-size: 17px; }
+    .product-body .old { color: #2a3a22; font-size: 12px; text-decoration: line-through; margin-left: 6px; }
+    .badge { display: inline-block; background: #1e2a14; color: #c9a84c; font-size: 11px; padding: 2px 8px; border-radius: 4px; margin-bottom: 8px; font-weight: 600; border: 1px solid #2a3a1e; }
+
+    .banner { margin: 0 48px 64px; background: linear-gradient(135deg, #111a0d 0%, #1a2a14 100%); border: 1px solid #2a3a1e; border-radius: 16px; padding: 48px; display: flex; justify-content: space-between; align-items: center; }
+    .banner h2 { font-size: 28px; font-weight: 800; color: #fff; margin-bottom: 10px; }
+    .banner p { color: #4a5a40; font-size: 15px; }
+    .banner-right { font-size: 80px; opacity: 0.4; }
+
+    footer { background: #080b06; padding: 32px 48px; display: flex; justify-content: space-between; align-items: center; color: #2a3a22; font-size: 13px; border-top: 1px solid #1e2a1a; }
+    footer .logo { font-size: 16px; color: #e8e8e0; font-weight: 800; }
+    footer .logo span { color: #c9a84c; }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="logo">⚡ RADIANT<span>MOTORS</span></div>
+    <ul class="nav-links">
+      <li><a href="#">Home</a></li>
+      <li><a href="#">Products</a></li>
+      <li><a href="#">Fitment Guide</a></li>
+      <li><a href="#">About</a></li>
+    </ul>
+    <div class="nav-actions">
+      <button class="btn btn-outline">Login</button>
+      <button class="btn btn-primary">Shop Now</button>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-left">
+      <div class="hero-tag">Kenya's #1 LED Lighting Store</div>
+      <h1>Light Up Your<br><span>Ride</span> Like Never<br>Before</h1>
+      <p>Premium LED headlights, fog lights, and interior lighting for every vehicle. Brighter roads, safer drives.</p>
+      <div class="hero-btns">
+        <button class="btn btn-primary">Browse Products</button>
+        <button class="btn btn-outline">Fitment Guide</button>
+      </div>
+    </div>
+    <div class="hero-right">💡</div>
+  </section>
+
+  <div class="stats">
+    <div class="stat"><h3>2,400+</h3><p>Products Available</p></div>
+    <div class="stat"><h3>12,000+</h3><p>Happy Customers</p></div>
+    <div class="stat"><h3>500+</h3><p>Vehicle Models</p></div>
+    <div class="stat"><h3>24hr</h3><p>Nairobi Delivery</p></div>
+  </div>
+
+  <section class="section">
+    <div class="section-title">Shop by <span>Category</span></div>
+    <div class="section-sub">Find the perfect lighting for your vehicle</div>
+    <div class="cards">
+      <div class="card"><div class="card-icon">💡</div><h3>Headlights</h3><p>HID & LED conversion kits</p></div>
+      <div class="card"><div class="card-icon">🌫️</div><h3>Fog Lights</h3><p>All-weather visibility</p></div>
+      <div class="card"><div class="card-icon">🔴</div><h3>Tail Lights</h3><p>LED strips & bulbs</p></div>
+      <div class="card"><div class="card-icon">✨</div><h3>Interior</h3><p>Ambient & dome lights</p></div>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:0">
+    <div class="section-title">Best <span>Sellers</span></div>
+    <div class="section-sub">Most popular this month</div>
+    <div class="products">
+      <div class="product"><div class="product-img">💡</div><div class="product-body"><div class="badge">SALE</div><h4>H4 LED Headlight Kit</h4><div><span class="price">KES 3,500</span><span class="old">5,000</span></div></div></div>
+      <div class="product"><div class="product-img">🌫️</div><div class="product-body"><h4>H11 Fog Light Bulbs</h4><div><span class="price">KES 1,800</span></div></div></div>
+      <div class="product"><div class="product-img">🔴</div><div class="product-body"><div class="badge">SALE</div><h4>LED Tail Light Strip</h4><div><span class="price">KES 2,200</span><span class="old">2,800</span></div></div></div>
+      <div class="product"><div class="product-img">✨</div><div class="product-body"><h4>Interior Ambient Kit</h4><div><span class="price">KES 1,200</span></div></div></div>
+    </div>
+  </section>
+
+  <div class="banner">
+    <div>
+      <h2>Not sure what fits your car?</h2>
+      <p>Use our free fitment guide — enter your make & model and we'll show you exactly what you need.</p>
+      <br>
+      <button class="btn btn-primary" style="margin-top:8px">Try Fitment Guide →</button>
+    </div>
+    <div class="banner-right">🚗</div>
+  </div>
+
+  <footer>
+    <div class="logo">⚡ RADIANT<span>MOTORS</span></div>
+    <div>© 2026 Radiant Motors. All rights reserved.</div>
+  </footer>
+
+</body>
+</html>
