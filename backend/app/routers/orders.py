@@ -1,9 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import HTMLResponse
 from datetime import datetime
 from typing import Optional
+from jinja2 import Template
 from app.models.order import OrderCreate, OrderStatusUpdate, PaymentStatusUpdate, TrackingUpdate
 from app.database import supabase
 from app.dependencies import get_current_user, require_admin
+from app.email_service import send_receipt, RECEIPT_TEMPLATE
 
 router = APIRouter()
 
@@ -57,7 +60,31 @@ def create_order(body: OrderCreate, user: dict = Depends(get_current_user)):
         "updated_at": now,
     }
     supabase.table("orders").insert(order).execute()
+    # send receipt email async-style (fire and forget)
+    send_receipt(user["sub"], order)
     return order
+
+@router.get("/{order_id}/receipt", response_class=HTMLResponse)
+def get_receipt(order_id: str, user: dict = Depends(get_current_user)):
+    res = supabase.table("orders").select("*").eq("order_id", order_id).execute()
+    if not res.data:
+        raise HTTPException(404, "Order not found")
+    order = res.data[0]
+    if order["user_id"] != user["sub"] and user.get("role") != "admin":
+        raise HTTPException(403, "Access denied")
+    return Template(RECEIPT_TEMPLATE).render(order=order)
+
+@router.post("/{order_id}/resend-receipt")
+def resend_receipt(order_id: str, user: dict = Depends(get_current_user)):
+    res = supabase.table("orders").select("*").eq("order_id", order_id).execute()
+    if not res.data:
+        raise HTTPException(404, "Order not found")
+    order = res.data[0]
+    if order["user_id"] != user["sub"] and user.get("role") != "admin":
+        raise HTTPException(403, "Access denied")
+    email = order.get("shipping_info", {}).get("email") or order["user_id"]
+    send_receipt(email, order, subject_prefix="Receipt")
+    return {"message": "Receipt sent"}
 
 @router.post("/{order_id}/cancel")
 def cancel(order_id: str, user: dict = Depends(get_current_user)):
