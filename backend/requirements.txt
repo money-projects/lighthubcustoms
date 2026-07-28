@@ -7,7 +7,9 @@ cffi==2.1.0
 click==8.4.2
 cryptography==49.0.0
 deprecation==2.1.0
+dnspython==2.8.0
 ecdsa==0.19.2
+email-validator==2.3.0
 fastapi==0.140.7
 h11==0.16.0
 h2==4.4.0
@@ -22,6 +24,7 @@ packaging==26.2
 passlib==1.7.4
 postgrest==2.31.0
 propcache==0.5.2
+psycopg2-binary==2.9.12
 pyasn1==0.6.4
 pycparser==3.0
 pydantic==2.13.4
