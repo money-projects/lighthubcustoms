@@ -6,7 +6,8 @@ class Settings(BaseSettings):
     jwt_secret: str
     jwt_algorithm: str = "HS256"
     jwt_expires_days: int = 7
-    admin_email: str
+    admin_email: str = ""
+    google_client_id: str = ""
 
     class Config:
         env_file = ".env"
