@@ -1,8 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+from typing import Literal
 from app.database import supabase
 from app.dependencies import require_admin
 
 router = APIRouter()
+
+class RoleUpdate(BaseModel):
+    role: Literal["user", "admin"]
 
 @router.get("")
 def list_users(_: dict = Depends(require_admin)):
@@ -16,8 +21,8 @@ def get_user(email: str, _: dict = Depends(require_admin)):
     return res.data[0]
 
 @router.put("/{email}/role")
-def update_role(email: str, body: dict, _: dict = Depends(require_admin)):
-    supabase.table("users").update({"role": body["role"]}).eq("email", email).execute()
+def update_role(email: str, body: RoleUpdate, _: dict = Depends(require_admin)):
+    supabase.table("users").update({"role": body.role}).eq("email", email).execute()
     return {"message": "Role updated"}
 
 @router.delete("/{email}")
