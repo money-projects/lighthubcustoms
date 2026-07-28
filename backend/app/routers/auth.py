@@ -1,42 +1,102 @@
 from fastapi import APIRouter, HTTPException, Depends, Request
-from passlib.context import CryptContext
-from google.oauth2 import id_token
-from google.auth.transport import requests as grequests
-from app.models.user import UserRegister, UserLogin, UserUpdate, PasswordChange, UserOut
 from app.database import supabase
-from app.config import settings
-from app.dependencies import create_token, get_current_user
+from app.dependencies import get_current_user
+from app.models.user import UserUpdate, PasswordChange, UserOut
 from app.limiter import limiter
+import boto3
+from app.config import settings
 
 router = APIRouter()
-pwd = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+cognito = boto3.client("cognito-idp", region_name=settings.cognito_region)
 
 @router.post("/register")
 @limiter.limit("10/minute")
-def register(request: Request, body: UserRegister):
-    if supabase.table("users").select("email").eq("email", body.email).execute().data:
+def register(request: Request, body: dict):
+    try:
+        cognito.sign_up(
+            ClientId=settings.cognito_client_id,
+            Username=body["email"],
+            Password=body["password"],
+            UserAttributes=[
+                {"Name": "email", "Value": body["email"]},
+                {"Name": "name",  "Value": body.get("name", "")},
+            ],
+        )
+        return {"message": "Verification code sent to email"}
+    except cognito.exceptions.UsernameExistsException:
         raise HTTPException(400, "User already exists")
-    user = {
-        "email": body.email, "name": body.name, "phone": body.phone,
-        "password": pwd.hash(body.password),
-        "role": "admin" if body.email == settings.admin_email else "user",
-        "verified": True
-    }
-    supabase.table("users").insert(user).execute()
-    token = create_token(user["email"], user["role"])
-    user.pop("password")
-    return {"token": token, "user": user}
+    except Exception as e:
+        raise HTTPException(400, str(e))
+
+@router.post("/confirm")
+def confirm(body: dict):
+    try:
+        cognito.confirm_sign_up(
+            ClientId=settings.cognito_client_id,
+            Username=body["email"],
+            ConfirmationCode=body["code"],
+        )
+        return {"message": "Email confirmed"}
+    except Exception as e:
+        raise HTTPException(400, str(e))
 
 @router.post("/login")
 @limiter.limit("10/minute")
-def login(request: Request, body: UserLogin):
-    res = supabase.table("users").select("*").eq("email", body.email).execute()
-    if not res.data or not pwd.verify(body.password, res.data[0]["password"]):
+def login(request: Request, body: dict):
+    try:
+        res = cognito.initiate_auth(
+            ClientId=settings.cognito_client_id,
+            AuthFlow="USER_PASSWORD_AUTH",
+            AuthParameters={"USERNAME": body["email"], "PASSWORD": body["password"]},
+        )
+        tokens = res["AuthenticationResult"]
+        return {
+            "access_token":  tokens["AccessToken"],
+            "id_token":      tokens["IdToken"],
+            "refresh_token": tokens["RefreshToken"],
+        }
+    except cognito.exceptions.NotAuthorizedException:
         raise HTTPException(401, "Invalid credentials")
-    user = res.data[0]
-    token = create_token(user["email"], user["role"])
-    user.pop("password")
-    return {"token": token, "user": user}
+    except cognito.exceptions.UserNotConfirmedException:
+        raise HTTPException(403, "Email not confirmed")
+    except Exception as e:
+        raise HTTPException(400, str(e))
+
+@router.post("/refresh")
+def refresh(body: dict):
+    try:
+        res = cognito.initiate_auth(
+            ClientId=settings.cognito_client_id,
+            AuthFlow="REFRESH_TOKEN_AUTH",
+            AuthParameters={"REFRESH_TOKEN": body["refresh_token"]},
+        )
+        tokens = res["AuthenticationResult"]
+        return {"access_token": tokens["AccessToken"], "id_token": tokens["IdToken"]}
+    except Exception as e:
+        raise HTTPException(401, str(e))
+
+@router.post("/forgot-password")
+@limiter.limit("5/minute")
+def forgot_password(request: Request, body: dict):
+    try:
+        cognito.forgot_password(ClientId=settings.cognito_client_id, Username=body["email"])
+        return {"message": "Reset code sent to email"}
+    except Exception as e:
+        raise HTTPException(400, str(e))
+
+@router.post("/reset-password")
+def reset_password(body: dict):
+    try:
+        cognito.confirm_forgot_password(
+            ClientId=settings.cognito_client_id,
+            Username=body["email"],
+            ConfirmationCode=body["code"],
+            Password=body["new_password"],
+        )
+        return {"message": "Password reset successful"}
+    except Exception as e:
+        raise HTTPException(400, str(e))
 
 @router.get("/profile", response_model=UserOut)
 def get_profile(current: dict = Depends(get_current_user)):
@@ -53,38 +113,6 @@ def update_profile(body: UserUpdate, current: dict = Depends(get_current_user)):
     u = res.data[0]; u.pop("password", None)
     return u
 
-@router.put("/change-password")
-def change_password(body: PasswordChange, current: dict = Depends(get_current_user)):
-    res = supabase.table("users").select("password").eq("email", current["sub"]).execute()
-    if not pwd.verify(body.current_password, res.data[0]["password"]):
-        raise HTTPException(400, "Current password incorrect")
-    supabase.table("users").update({"password": pwd.hash(body.new_password)}).eq("email", current["sub"]).execute()
-    return {"message": "Password updated"}
-
 @router.post("/logout")
 def logout():
     return {"message": "Logged out"}
-
-@router.post("/google")
-@limiter.limit("10/minute")
-def google_auth(request: Request, body: dict):
-    if not settings.google_client_id:
-        raise HTTPException(500, "Google OAuth not configured")
-    try:
-        info = id_token.verify_oauth2_token(body.get("token"), grequests.Request(), settings.google_client_id)
-    except Exception:
-        raise HTTPException(401, "Invalid Google token")
-
-    email = info["email"]
-    name  = info.get("name", email.split("@")[0])
-
-    res = supabase.table("users").select("*").eq("email", email).execute()
-    if res.data:
-        user = res.data[0]
-        user.pop("password", None)
-    else:
-        user = {"email": email, "name": name, "phone": None, "password": None, "role": "user", "verified": True}
-        supabase.table("users").insert(user).execute()
-
-    token = create_token(email, user["role"])
-    return {"token": token, "user": user}
