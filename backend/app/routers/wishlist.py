@@ -1,9 +1,14 @@
 from fastapi import APIRouter, Depends
+from pydantic import BaseModel
+from typing import List
 from datetime import datetime
 from app.database import supabase
 from app.dependencies import get_current_user
 
 router = APIRouter()
+
+class WishlistSave(BaseModel):
+    items: List[str] = []
 
 def _get(uid):
     res = supabase.table("wishlist").select("items").eq("user_id", uid).execute()
@@ -17,8 +22,8 @@ def get_wishlist(user: dict = Depends(get_current_user)):
     return _get(user["sub"])
 
 @router.post("")
-def save_wishlist(body: dict, user: dict = Depends(get_current_user)):
-    _save(user["sub"], body.get("items", []))
+def save_wishlist(body: WishlistSave, user: dict = Depends(get_current_user)):
+    _save(user["sub"], body.items)
     return {"message": "Wishlist saved"}
 
 @router.post("/add/{product_id}")

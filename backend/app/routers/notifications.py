@@ -1,9 +1,16 @@
 from fastapi import APIRouter, Depends
+from pydantic import BaseModel
+from typing import Literal
 from datetime import datetime
 from app.database import supabase
 from app.dependencies import get_current_user, require_admin
 
 router = APIRouter()
+
+class BroadcastBody(BaseModel):
+    title: str
+    message: str
+    type: Literal["info", "success", "warning", "error"] = "info"
 
 @router.get("")
 def get_all(user: dict = Depends(get_current_user)):
@@ -25,15 +32,15 @@ def delete(notification_id: str, user: dict = Depends(get_current_user)):
     return {"message": "Deleted"}
 
 @router.post("/broadcast")
-def broadcast(body: dict, _: dict = Depends(require_admin)):
+def broadcast(body: BroadcastBody, _: dict = Depends(require_admin)):
     users = supabase.table("users").select("email").execute().data
     now = datetime.utcnow().isoformat()
     notifs = [{
         "notification_id": f"NOTIF-{int(datetime.utcnow().timestamp()*1000)}-{i}",
         "user_id": u["email"],
-        "title": body.get("title", ""),
-        "message": body.get("message", ""),
-        "type": body.get("type", "info"),
+        "title": body.title,
+        "message": body.message,
+        "type": body.type,
         "is_read": False,
         "created_at": now
     } for i, u in enumerate(users)]

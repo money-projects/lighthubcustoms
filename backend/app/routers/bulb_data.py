@@ -1,8 +1,20 @@
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+from typing import Optional, List
 from app.database import supabase
 from app.dependencies import require_admin
 
 router = APIRouter()
+
+class BulbDataBody(BaseModel):
+    make: str
+    model: str
+    year_from: Optional[int] = None
+    year_to: Optional[int] = None
+    headlight: Optional[str] = None
+    fog_light: Optional[str] = None
+    tail_light: Optional[str] = None
+    interior: Optional[str] = None
 
 @router.get("")
 def get_all():
@@ -26,14 +38,14 @@ def get_by_vehicle(make: str, model: str):
     return res.data[0]
 
 @router.post("", status_code=201)
-def add(body: dict, _: dict = Depends(require_admin)):
-    body["vehicle_key"] = f"{body['make']}#{body['model']}"
-    supabase.table("bulb_data").insert(body).execute()
-    return body
+def add(body: BulbDataBody, _: dict = Depends(require_admin)):
+    data = {**body.model_dump(), "vehicle_key": f"{body.make}#{body.model}"}
+    supabase.table("bulb_data").insert(data).execute()
+    return data
 
 @router.put("/{make}/{model}")
-def update(make: str, model: str, body: dict, _: dict = Depends(require_admin)):
-    return supabase.table("bulb_data").update(body).eq("vehicle_key", f"{make}#{model}").execute().data[0]
+def update(make: str, model: str, body: BulbDataBody, _: dict = Depends(require_admin)):
+    return supabase.table("bulb_data").update(body.model_dump()).eq("vehicle_key", f"{make}#{model}").execute().data[0]
 
 @router.delete("/{make}/{model}")
 def delete(make: str, model: str, _: dict = Depends(require_admin)):
