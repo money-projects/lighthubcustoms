@@ -36,6 +36,10 @@ def get_all(
     res = query.order("created_at", desc=True).range(offset, offset + limit - 1).execute()
     return {"data": res.data, "total": res.count, "page": page, "limit": limit, "pages": -(-res.count // limit)}
 
+@router.get("/user/{email}")
+def get_user_orders_admin(email: str, _: dict = Depends(require_admin)):
+    return supabase.table("orders").select("*").eq("user_id", email).order("created_at", desc=True).execute().data
+
 @router.get("/{order_id}")
 def get_order(order_id: str, user: dict = Depends(get_current_user)):
     res = supabase.table("orders").select("*").eq("order_id", order_id).execute()

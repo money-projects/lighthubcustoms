@@ -4,7 +4,7 @@ from typing import Literal, List, Optional
 class ProductCreate(BaseModel):
     name: str
     category: str
-    section: Literal["best-seller", "new-arrival", "carousel", "deal", "accessory"]
+    section: str
     price: float
     description: str = ""
     specifications: str = ""
