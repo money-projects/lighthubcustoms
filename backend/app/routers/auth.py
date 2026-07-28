@@ -100,6 +100,18 @@ def refresh(body: RefreshBody):
     except Exception as e:
         raise HTTPException(401, str(e))
 
+@router.post("/resend-code")
+@limiter.limit("3/minute")
+def resend_code(request: Request, body: ForgotBody):
+    try:
+        cognito.resend_confirmation_code(
+            ClientId=settings.cognito_client_id,
+            Username=body.email,
+        )
+        return {"message": "Verification code resent"}
+    except Exception as e:
+        raise HTTPException(400, str(e))
+
 @router.post("/forgot-password")
 @limiter.limit("5/minute")
 def forgot_password(request: Request, body: ForgotBody):
