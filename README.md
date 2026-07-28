@@ -1,4 +1,4 @@
-# 🚗 Light Hub Customs - Full Stack E-Commerce Platform
+# 🚗 Radiant Motors - Full Stack E-Commerce Platform
 
 Complete automotive LED lighting e-commerce platform with secure backend API, JWT authentication, and AWS DynamoDB integration.
 
@@ -46,7 +46,7 @@ Complete automotive LED lighting e-commerce platform with secure backend API, JW
 
 1. **Clone and navigate to project**
 ```bash
-cd /home/fagitone/Downloads/light-hub-customs
+cd /home/fagitone/Downloads/radiant-motors
 ```
 
 2. **Start everything (automated)**
@@ -165,7 +165,7 @@ curl -X POST http://localhost:3001/api/auth/register \
 ## 📁 Project Structure
 
 ```
-light-hub-customs/
+radiant-motors/
 ├── backend/                    # Node.js backend
 │   ├── config/                # AWS configuration
 │   ├── controllers/           # API controllers
@@ -233,4 +233,4 @@ Private project - All rights reserved
 
 ## 🎉 Credits
 
-Built with ❤️ for Light Hub Customs
+Built with ❤️ for Radiant Motors
