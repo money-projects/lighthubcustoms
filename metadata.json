@@ -1,6 +1,0 @@
-{
-  "name": "Light Hub Customs",
-  "description": "Premium automotive LED lighting e-commerce store specializing in custom headlights, fog lights, and accessories.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}
