@@ -29,7 +29,7 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(bearer_
     claims = verify_cognito_token(credentials.credentials)
     email = claims.get("email") or claims.get("username") or claims.get("cognito:username")
 
-    # auto-provision user in Supabase on first login
+    # auto-provision user in Supabase on first login (fallback only)
     res = supabase.table("users").select("email,role").eq("email", email).execute()
     if not res.data:
         supabase.table("users").insert({

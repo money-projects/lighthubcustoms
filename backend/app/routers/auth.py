@@ -13,6 +13,7 @@ cognito = boto3.client("cognito-idp", region_name=settings.cognito_region)
 class RegisterBody(BaseModel):
     email: EmailStr
     name: str = Field(min_length=2, max_length=100)
+    phone: str = Field(min_length=7, max_length=20)
     password: str = Field(min_length=8, max_length=128)
 
 class ConfirmBody(BaseModel):
@@ -45,8 +46,20 @@ def register(request: Request, body: RegisterBody):
             UserAttributes=[
                 {"Name": "email", "Value": body.email},
                 {"Name": "name",  "Value": body.name},
+                {"Name": "phone_number", "Value": body.phone},
             ],
         )
+        # Store pending user in Supabase (unverified) so name/phone are preserved
+        existing = supabase.table("users").select("email").eq("email", body.email).execute()
+        if not existing.data:
+            supabase.table("users").insert({
+                "email": body.email,
+                "name": body.name,
+                "phone": body.phone,
+                "password": None,
+                "role": "user",
+                "verified": False,
+            }).execute()
         return {"message": "Verification code sent to email"}
     except cognito.exceptions.UsernameExistsException:
         raise HTTPException(400, "User already exists")
@@ -61,6 +74,8 @@ def confirm(body: ConfirmBody):
             Username=body.email,
             ConfirmationCode=body.code,
         )
+        # Mark user as verified in Supabase
+        supabase.table("users").update({"verified": True}).eq("email", body.email).execute()
         return {"message": "Email confirmed"}
     except Exception as e:
         raise HTTPException(400, str(e))
