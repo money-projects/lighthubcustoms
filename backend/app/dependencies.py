@@ -32,9 +32,11 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(bearer_
     # auto-provision user in Supabase on first login (fallback only)
     res = supabase.table("users").select("email,role").eq("email", email).execute()
     if not res.data:
+        # Try to get name from Cognito token claims (id_token carries 'name')
+        name = claims.get("name") or claims.get("given_name") or email.split("@")[0]
         supabase.table("users").insert({
             "email": email,
-            "name": claims.get("name", email.split("@")[0]),
+            "name": name,
             "phone": None,
             "password": "",
             "role": "user",

@@ -19,10 +19,10 @@ const playfairDisplay = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: 'Boty — Natural Skincare',
-  description: 'Premium natural skincare and body care products. Glow gently with Boty.',
+  title: 'Radiant Motors — Premium LED Lighting',
+  description: 'Upgrade your vehicle with premium LED lighting. Headlights, fog lights, and more. Fast delivery across Kenya.',
   generator: 'v0.app',
-  keywords: ['skincare', 'natural', 'organic', 'beauty', 'body care', 'cruelty-free'],
+  keywords: ['LED headlights', 'car lights', 'fog lights', 'Kenya', 'automotive lighting', 'Radiant Motors'],
   icons: {
     icon: [
       {

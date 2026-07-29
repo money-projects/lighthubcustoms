@@ -154,17 +154,40 @@ const products = [
   }
 ]
 
-const categories = ["all", "serums", "moisturizers", "cleansers", "oils", "masks", "toners"]
+const API = process.env.NEXT_PUBLIC_API_URL
+
+type ApiProduct = {
+  product_id: string
+  name: string
+  description: string
+  price: number
+  original_price?: number | null
+  image_url: string
+  category: string
+  discount?: string | null
+}
+
+type ApiCategory = { category_id: string; name: string }
 
 export default function ShopPage() {
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [showFilters, setShowFilters] = useState(false)
   const [isVisible, setIsVisible] = useState(false)
+  const [apiProducts, setApiProducts] = useState<ApiProduct[]>([])
+  const [apiCategories, setApiCategories] = useState<ApiCategory[]>([])
   const gridRef = useRef<HTMLDivElement>(null)
 
-  const filteredProducts = selectedCategory === "all"
-    ? products
-    : products.filter(p => p.category === selectedCategory)
+  useEffect(() => {
+    const url = selectedCategory === "all"
+      ? `${API}/api/products`
+      : `${API}/api/products?category=${encodeURIComponent(selectedCategory)}`
+    fetch(url).then(r => r.json()).then(d => setApiProducts(d.data || []))
+    fetch(`${API}/api/categories`).then(r => r.json()).then(d => setApiCategories(Array.isArray(d) ? d : d.data || []))
+  }, [])
+
+  const categories = apiCategories.length > 0 ? ["all", ...apiCategories.map(c => c.name)] : ["all"]
+
+  const filteredProducts = apiProducts
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -187,11 +210,11 @@ export default function ShopPage() {
     }
   }, [])
 
-  // Reset animation when category changes
   useEffect(() => {
-    setIsVisible(false)
-    const timer = setTimeout(() => setIsVisible(true), 50)
-    return () => clearTimeout(timer)
+    const url = selectedCategory === "all"
+      ? `${API}/api/products`
+      : `${API}/api/products?category=${encodeURIComponent(selectedCategory)}`
+    fetch(url).then(r => r.json()).then(d => setApiProducts(d.data || []))
   }, [selectedCategory])
 
   return (
@@ -224,8 +247,8 @@ export default function ShopPage() {
               Filters
             </button>
 
-            {/* Desktop Categories */}
-            <div className="hidden lg:flex items-center gap-2">
+            {/* Categories */}
+            <div className="flex items-center gap-2 flex-wrap">
               {categories.map((category) => (
                 <button
                   key={category}
@@ -289,13 +312,41 @@ export default function ShopPage() {
             ref={gridRef}
             className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"
           >
+            {filteredProducts.length === 0 && apiProducts.length === 0 && (
+              <div className="col-span-3 text-center py-20 text-muted-foreground">Loading products...</div>
+            )}
             {filteredProducts.map((product, index) => (
-              <ProductCard 
-                key={product.id}
-                product={product}
-                index={index}
-                isVisible={isVisible}
-              />
+              <Link
+                key={product.product_id}
+                href={`/product/${product.product_id}`}
+                className={`group transition-all duration-700 ease-out ${isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}
+                style={{ transitionDelay: `${index * 80}ms` }}
+              >
+                <div className="bg-card rounded-3xl overflow-hidden boty-shadow boty-transition group-hover:scale-[1.02]">
+                  <div className="relative aspect-square bg-muted overflow-hidden">
+                    <Image src={product.image_url || "/placeholder.svg"} alt={product.name} fill
+                      className="object-cover boty-transition group-hover:scale-105" />
+                    {product.discount && (
+                      <span className="absolute top-4 left-4 px-3 py-1 rounded-full text-xs tracking-wide bg-primary/10 text-primary">Sale</span>
+                    )}
+                    <button type="button"
+                      className="absolute bottom-4 right-4 w-12 h-12 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 boty-transition boty-shadow"
+                      onClick={e => e.preventDefault()} aria-label="Add to cart">
+                      <ShoppingBag className="w-5 h-5 text-foreground" />
+                    </button>
+                  </div>
+                  <div className="p-6">
+                    <h3 className="font-serif text-xl text-foreground mb-1">{product.name}</h3>
+                    <p className="text-sm text-muted-foreground mb-4 line-clamp-1">{product.description}</p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg font-medium text-foreground">KES {product.price.toLocaleString()}</span>
+                      {product.original_price && (
+                        <span className="text-sm text-muted-foreground line-through">KES {product.original_price.toLocaleString()}</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </Link>
             ))}
           </div>
         </div>

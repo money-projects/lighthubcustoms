@@ -19,10 +19,10 @@ const footerLinks = {
     { name: "Press", href: "/" }
   ],
   support: [
-    { name: "Contact Us", href: "/" },
-    { name: "FAQ", href: "/" },
-    { name: "Delivery Info", href: "/" },
-    { name: "Returns", href: "/" }
+    { name: "Contact Us", href: "/contact" },
+    { name: "FAQ", href: "/faq" },
+    { name: "Delivery Info", href: "/delivery" },
+    { name: "Returns", href: "/returns" }
   ]
 }
 

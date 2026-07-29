@@ -22,7 +22,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const t = localStorage.getItem("rm_token")
+    const t = localStorage.getItem("rm_id_token")
     if (t) {
       setToken(t)
       fetch(`${API}/api/auth/profile`, { headers: { Authorization: `Bearer ${t}` } })
@@ -45,15 +45,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error(err.detail || "Login failed")
     }
     const data = await res.json()
-    const t = data.access_token
-    localStorage.setItem("rm_token", t)
+    // Use id_token for API calls — it carries Cognito user attributes (name, email)
+    const t = data.id_token
+    localStorage.setItem("rm_id_token", t)
     setToken(t)
     const profile = await fetch(`${API}/api/auth/profile`, { headers: { Authorization: `Bearer ${t}` } })
     setUser(await profile.json())
   }
 
   const logout = () => {
-    localStorage.removeItem("rm_token")
+    localStorage.removeItem("rm_id_token")
     setToken(null)
     setUser(null)
   }
