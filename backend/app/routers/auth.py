@@ -56,7 +56,7 @@ def register(request: Request, body: RegisterBody):
                 "email": body.email,
                 "name": body.name,
                 "phone": body.phone,
-                "password": None,
+                "password": "",
                 "role": "user",
                 "verified": False,
             }).execute()

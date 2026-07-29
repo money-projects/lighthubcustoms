@@ -36,7 +36,7 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(bearer_
             "email": email,
             "name": claims.get("name", email.split("@")[0]),
             "phone": None,
-            "password": None,
+            "password": "",
             "role": "user",
             "verified": True,
         }).execute()
